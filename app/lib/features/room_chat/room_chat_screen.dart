@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../services/api_client.dart';
 import '../../services/storage.dart';
+import '../../theme/theme.dart';
 
 class RoomChatScreen extends ConsumerStatefulWidget {
   final String publicCode;
@@ -212,23 +213,29 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
     
     return Scaffold(
+      backgroundColor: isLight ? AppTheme.offWhite : AppTheme.backgroundDark,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               widget.publicCode,
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontFamily: 'monospace',
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
               ),
             ),
             if (_ttlExpiration != null)
               Text(
                 _getTtlText(),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
           ],
@@ -236,65 +243,111 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
         leading: IconButton(
           icon: Icon(PhosphorIcons.arrowLeft()),
           onPressed: () => context.pop(),
+          style: IconButton.styleFrom(
+            backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         ),
         actions: [
           IconButton(
             icon: Icon(PhosphorIcons.shareNetwork()),
             onPressed: _shareRoom,
             tooltip: 'Copy room link',
+            style: IconButton.styleFrom(
+              backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
           ),
+          const SizedBox(width: 8),
           if (!_roomSaved)
             IconButton(
               icon: Icon(PhosphorIcons.bookmarkSimple()),
               onPressed: _saveRoom,
               tooltip: 'Save room (+24h)',
+              style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
+          const SizedBox(width: 8),
           PopupMenuButton<String>(
             icon: Icon(PhosphorIcons.dotsThreeVertical()),
             onSelected: _handleMenuAction,
+            style: IconButton.styleFrom(
+              backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'settings',
                 child: ListTile(
-                  leading: Icon(Icons.settings),
-                  title: Text('Settings'),
+                  leading: Icon(PhosphorIcons.gear()),
+                  title: const Text('Settings'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'close',
                 child: ListTile(
-                  leading: Icon(Icons.close, color: Colors.red),
-                  title: Text('Close Room', style: TextStyle(color: Colors.red)),
+                  leading: Icon(PhosphorIcons.x(), color: AppTheme.danger),
+                  title: Text('Close Room', style: TextStyle(color: AppTheme.danger)),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
             ],
           ),
+          const SizedBox(width: 16),
         ],
       ),
       body: Column(
         children: [
-          // Goal Banner
+          // Goal Banner with glassmorphism
           if (_goal != null)
             Container(
               width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               padding: const EdgeInsets.all(16),
-              color: theme.colorScheme.primaryContainer.withOpacity(0.1),
+              decoration: AppTheme.glassContainer(
+                isLight: isLight,
+                opacity: 0.1,
+                borderColor: theme.colorScheme.primary.withOpacity(0.3),
+              ),
               child: Row(
                 children: [
-                  Icon(
-                    PhosphorIcons.target(),
-                    size: 16,
-                    color: theme.colorScheme.primary,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      PhosphorIcons.target(),
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      'Goal: $_goal',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Room Goal',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _goal!,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -304,10 +357,26 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
           // Messages List
           Expanded(
             child: _isLoadingMessages && _messages.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Loading messages...',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) => _buildMessageItem(_messages[index]),
                   ),
@@ -325,39 +394,53 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
   
   Widget _buildMessageItem(ChatMessage message) {
     final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
     final isUser = message.role == 'user';
     final isCurrentUser = message.authorSession == _sessionId;
     
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 24),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: isUser 
-                ? (isCurrentUser ? theme.colorScheme.primary : theme.colorScheme.secondary)
-                : theme.colorScheme.tertiary,
+          // Enhanced Avatar with gradient
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: isUser 
+                  ? (isCurrentUser ? AppTheme.primaryGradient : AppTheme.lavenderGradient)
+                  : AppTheme.tealGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: (isUser 
+                      ? (isCurrentUser ? theme.colorScheme.primary : theme.colorScheme.secondary)
+                      : theme.colorScheme.tertiary).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Icon(
               isUser ? PhosphorIcons.user() : PhosphorIcons.magicWand(),
-              size: 16,
+              size: 18,
               color: Colors.white,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           
           // Message Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
+                // Header with improved spacing
                 Row(
                   children: [
                     Text(
                       isUser ? (isCurrentUser ? 'You' : 'Other') : 'BetterSaid',
-                      style: theme.textTheme.labelMedium?.copyWith(
+                      style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: isUser 
                             ? (isCurrentUser ? theme.colorScheme.primary : theme.colorScheme.secondary)
@@ -365,31 +448,43 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      _formatTime(message.createdAt),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.outline.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        _formatTime(message.createdAt),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 
-                // Message Text
+                // Message Text with glassmorphism
                 Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isUser 
-                        ? theme.colorScheme.surfaceVariant.withOpacity(0.5)
-                        : theme.colorScheme.primaryContainer.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withOpacity(0.2),
-                    ),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: AppTheme.glassContainer(
+                    isLight: isLight,
+                    opacity: isUser ? 0.08 : 0.12,
+                    blur: 12,
+                    borderColor: isUser 
+                        ? (isCurrentUser 
+                            ? theme.colorScheme.primary.withOpacity(0.2)
+                            : theme.colorScheme.secondary.withOpacity(0.2))
+                        : theme.colorScheme.tertiary.withOpacity(0.2),
                   ),
                   child: Text(
                     message.content,
-                    style: theme.textTheme.bodyMedium,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      height: 1.5,
+                    ),
                   ),
                 ),
                 
@@ -397,7 +492,7 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
                 if (message.rewrites != null && 
                     message.rewrites!.isNotEmpty && 
                     message.authorSession == _sessionId) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   _buildMessageRewrites(message.rewrites!),
                 ],
               ],
@@ -471,38 +566,55 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
   
   Widget _buildRewritesSection() {
     final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
     
-    // Handle loading state
+    // Handle loading state with enhanced design
     if (_isGeneratingRewrites) {
       return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          border: Border(
-            top: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2)),
-          ),
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
+        decoration: AppTheme.elevatedGlassContainer(
+          isLight: isLight,
+          opacity: 0.15,
+          blur: 20,
         ),
         child: Column(
           children: [
             Row(
               children: [
-                Icon(
-                  PhosphorIcons.magicWand(),
-                  size: 16,
-                  color: theme.colorScheme.tertiary,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.tealGradient,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    PhosphorIcons.magicWand(),
+                    size: 18,
+                    color: Colors.white,
+                  ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Text(
                   'Generating AI Rewrites...',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: theme.colorScheme.tertiary,
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 24),
+            CircularProgressIndicator(
+              color: theme.colorScheme.tertiary,
+              strokeWidth: 3,
+            ),
             const SizedBox(height: 16),
-            const Center(child: CircularProgressIndicator()),
+            Text(
+              'Crafting calm, direct, and brief alternatives',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
           ],
         ),
       );
@@ -519,182 +631,250 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
       orElse: () => _currentRewrites!.rewrites.first,
     );
     
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2)),
-        ),
+    return AnimatedContainer(
+      duration: AppTheme.smoothTransition,
+      curve: AppTheme.gentleEase,
+      margin: const EdgeInsets.all(16),
+      decoration: AppTheme.elevatedGlassContainer(
+        isLight: isLight,
+        opacity: 0.12,
+        blur: 15,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Row(
-            children: [
-              Icon(
-                PhosphorIcons.magicWand(),
-                size: 16,
-                color: theme.colorScheme.tertiary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'AI Rewrites',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.tertiary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => setState(() => _currentRewrites = null),
-                child: const Text('Dismiss'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          // Single Card with Segmented Control
-          Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Enhanced Header
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
               children: [
-                // Segmented Control
                 Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
-                    ),
-                    child: Row(
-                      children: _currentRewrites!.rewrites.map((rewrite) {
-                        final isSelected = _selectedRewriteStyle == rewrite.style;
-                        return Expanded(
-                          child: InkWell(
-                            onTap: () => setState(() => _selectedRewriteStyle = rewrite.style),
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: isSelected 
-                                    ? _getStyleColor(rewrite.style, theme)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                rewrite.style.toUpperCase(),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: isSelected 
-                                      ? Colors.white 
-                                      : theme.colorScheme.onSurface,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.tealGradient,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    PhosphorIcons.magicWand(),
+                    size: 18,
+                    color: Colors.white,
                   ),
                 ),
-                
-                // Selected Rewrite Text
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'AI Rewrites',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    child: Text(
-                      selectedRewrite.text,
-                      style: theme.textTheme.bodyMedium,
+                    Text(
+                      'Choose your communication style',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                
-                // Action Buttons
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Row(
-                    children: [
-                      // Copy Button (Icon)
-                      IconButton(
-                        onPressed: () => _copyText(selectedRewrite.text),
-                        icon: Icon(PhosphorIcons.copy()),
-                        tooltip: 'Copy',
-                        style: IconButton.styleFrom(
-                          backgroundColor: theme.colorScheme.surfaceVariant,
-                          foregroundColor: theme.colorScheme.onSurfaceVariant,
-                          padding: const EdgeInsets.all(12),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Send Button (Primary)
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _sendRewrite(selectedRewrite.text),
-                          icon: Icon(PhosphorIcons.paperPlaneRight(), size: 18),
-                          label: const Text('Send'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _getStyleColor(_selectedRewriteStyle, theme),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                    ],
+                const Spacer(),
+                IconButton(
+                  onPressed: () => setState(() => _currentRewrites = null),
+                  icon: Icon(PhosphorIcons.x(), size: 18),
+                  style: IconButton.styleFrom(
+                    backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ],
             ),
           ),
           
-          // Notes (if any)
-          if (_currentRewrites!.notes != null && _currentRewrites!.notes!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
+          // Enhanced Segmented Control
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
+                color: theme.colorScheme.surface.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.1),
+                ),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    PhosphorIcons.info(),
-                    size: 16,
-                    color: theme.colorScheme.primary,
+                children: _currentRewrites!.rewrites.map((rewrite) {
+                  final isSelected = _selectedRewriteStyle == rewrite.style;
+                  return Expanded(
+                    child: AnimatedContainer(
+                      duration: AppTheme.quickTransition,
+                      curve: AppTheme.gentleEase,
+                      child: InkWell(
+                        onTap: () => setState(() => _selectedRewriteStyle = rewrite.style),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            gradient: isSelected 
+                                ? _getStyleGradient(rewrite.style)
+                                : null,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: isSelected ? [
+                              BoxShadow(
+                                color: _getStyleColor(rewrite.style, theme).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ] : null,
+                          ),
+                          child: Text(
+                            rewrite.style.toUpperCase(),
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: isSelected 
+                                  ? Colors.white 
+                                  : theme.colorScheme.onSurface.withOpacity(0.7),
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Selected Rewrite Text with animation
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: AnimatedSwitcher(
+              duration: AppTheme.smoothTransition,
+              child: Container(
+                key: ValueKey(_selectedRewriteStyle),
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: AppTheme.glassContainer(
+                  isLight: isLight,
+                  opacity: 0.08,
+                  blur: 10,
+                  borderColor: _getStyleColor(_selectedRewriteStyle, theme).withOpacity(0.2),
+                ),
+                child: Text(
+                  selectedRewrite.text,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    height: 1.6,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _currentRewrites!.notes!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Enhanced Action Buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                // Copy Button with glassmorphism
+                Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withOpacity(0.2),
+                    ),
+                  ),
+                  child: IconButton(
+                    onPressed: () => _copyText(selectedRewrite.text),
+                    icon: Icon(PhosphorIcons.copy()),
+                    tooltip: 'Copy to clipboard',
+                    style: IconButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                
+                // Send Button with gradient
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: _getStyleGradient(_selectedRewriteStyle),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _getStyleColor(_selectedRewriteStyle, theme).withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton.icon(
+                      onPressed: () => _sendRewrite(selectedRewrite.text),
+                      icon: Icon(PhosphorIcons.paperPlaneRight(), size: 18),
+                      label: const Text('Send Rewrite'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          
+          // Notes with improved styling
+          if (_currentRewrites!.notes != null && _currentRewrites!.notes!.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withOpacity(0.2),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      PhosphorIcons.info(),
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _currentRewrites!.notes!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
+          
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -702,78 +882,170 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
   
   Widget _buildDraftInput() {
     final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
     
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: theme.colorScheme.surface.withOpacity(0.95),
         border: Border(
-          top: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2)),
+          top: BorderSide(color: theme.colorScheme.outline.withOpacity(0.1)),
         ),
       ),
       child: Column(
         children: [
-          TextField(
-            controller: _draftController,
-            decoration: InputDecoration(
-              hintText: 'Type your message here...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              contentPadding: const EdgeInsets.all(16),
+          // Enhanced TextField with glassmorphism
+          Container(
+            decoration: AppTheme.glassContainer(
+              isLight: isLight,
+              opacity: 0.08,
+              blur: 10,
             ),
-            maxLines: 4,
-            minLines: 1,
-            textCapitalization: TextCapitalization.sentences,
+            child: TextField(
+              controller: _draftController,
+              decoration: InputDecoration(
+                hintText: 'Type your message here...',
+                hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.5),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.primary.withOpacity(0.5),
+                    width: 2,
+                  ),
+                ),
+                filled: true,
+                fillColor: Colors.transparent,
+                contentPadding: const EdgeInsets.all(20),
+              ),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                height: 1.5,
+              ),
+              maxLines: 4,
+              minLines: 1,
+              textCapitalization: TextCapitalization.sentences,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          
+          // Enhanced Action Buttons
           Row(
             children: [
-              // Big Draft Button
+              // Primary Draft Button with gradient
               Expanded(
-                flex: 4,
-                child: ElevatedButton.icon(
-                  onPressed: _isGeneratingRewrites || _draftController.text.trim().isEmpty
-                      ? null
-                      : _generateRewrites,
-                  icon: _isGeneratingRewrites
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(PhosphorIcons.magicWand(), size: 20),
-                  label: Text(
-                    _isGeneratingRewrites ? 'Generating...' : 'Draft',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                flex: 3,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: theme.colorScheme.onPrimary,
+                  child: ElevatedButton.icon(
+                    onPressed: _isGeneratingRewrites || _draftController.text.trim().isEmpty
+                        ? null
+                        : _generateRewrites,
+                    icon: _isGeneratingRewrites
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Icon(PhosphorIcons.magicWand(), size: 20),
+                    label: Text(
+                      _isGeneratingRewrites ? 'Generating...' : 'Get AI Rewrites',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              // Small Send Button
-              SizedBox(
-                width: 64,
-                child: ElevatedButton(
+              const SizedBox(width: 16),
+              
+              // Secondary Send Button with glassmorphism
+              Container(
+                decoration: AppTheme.glassContainer(
+                  isLight: isLight,
+                  opacity: 0.1,
+                  blur: 10,
+                  borderColor: theme.colorScheme.secondary.withOpacity(0.3),
+                ),
+                child: IconButton(
                   onPressed: _isSendingDraft || _draftController.text.trim().isEmpty
                       ? null
                       : _showSendConfirmation,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: theme.colorScheme.secondary,
-                    foregroundColor: theme.colorScheme.onSecondary,
-                  ),
-                  child: _isSendingDraft
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                  icon: _isSendingDraft
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              theme.colorScheme.secondary,
+                            ),
+                          ),
                         )
-                      : Icon(PhosphorIcons.paperPlaneRight(), size: 16),
+                      : Icon(
+                          PhosphorIcons.paperPlaneRight(),
+                          size: 20,
+                          color: theme.colorScheme.secondary,
+                        ),
+                  tooltip: 'Send without AI rewrites',
+                  style: IconButton.styleFrom(
+                    padding: const EdgeInsets.all(18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          // Helper text
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                PhosphorIcons.lightbulb(),
+                size: 14,
+                color: theme.colorScheme.onSurface.withOpacity(0.5),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Tap "Get AI Rewrites" for calm, direct, and brief alternatives',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    height: 1.4,
+                  ),
                 ),
               ),
             ],
@@ -793,6 +1065,19 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
         return theme.colorScheme.tertiary;
       default:
         return theme.colorScheme.primary;
+    }
+  }
+  
+  LinearGradient _getStyleGradient(String style) {
+    switch (style) {
+      case 'calm':
+        return AppTheme.primaryGradient;
+      case 'direct':
+        return AppTheme.lavenderGradient;
+      case 'brief':
+        return AppTheme.tealGradient;
+      default:
+        return AppTheme.primaryGradient;
     }
   }
   

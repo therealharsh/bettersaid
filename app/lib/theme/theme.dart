@@ -2,213 +2,87 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Brand Colors
-  static const Color primary = Color(0xFF2563EB);
-  static const Color secondary = Color(0xFF0EA5A4);
-  static const Color accent = Color(0xFFF59E0B);
+  // Brand Colors - Apple 2025 Inspired
+  static const Color deepBlue = Color(0xFF1E3A8A);
+  static const Color lavender = Color(0xFF8B5CF6);
+  static const Color mutedTeal = Color(0xFF14B8A6);
+  static const Color offWhite = Color(0xFFF9FAFB);
+  static const Color charcoalGray = Color(0xFF111827);
   
   // Light Theme Colors
   static const Color titleLight = Color(0xFF0F172A);
-  static const Color bodyLight = Color(0xFF334155);
-  static const Color mutedLight = Color(0xFF64748B);
-  static const Color borderLight = Color(0xFFE2E8F0);
-  static const Color surfaceLight = Color(0xFFF8FAFC);
+  static const Color bodyLight = Color(0xFF374151);
+  static const Color mutedLight = Color(0xFF6B7280);
+  static const Color borderLight = Color(0xFFE5E7EB);
+  static const Color surfaceLight = Color(0xFFFAFAFA);
+  static const Color backgroundLight = Color(0xFFFFFFFF);
   
   // Dark Theme Colors
   static const Color backgroundDark = Color(0xFF0B1220);
-  static const Color surfaceDark = Color(0xFF111827);
-  static const Color textDark = Color(0xFFE5E7EB);
-  static const Color mutedDark = Color(0xFF94A3B8);
-  static const Color borderDark = Color(0xFF1F2937);
+  static const Color surfaceDark = Color(0xFF1F2937);
+  static const Color textDark = Color(0xFFF3F4F6);
+  static const Color mutedDark = Color(0xFF9CA3AF);
+  static const Color borderDark = Color(0xFF374151);
   
   // Status Colors
   static const Color danger = Color(0xFFEF4444);
-  static const Color success = Color(0xFF16A34A);
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFF59E0B);
   
+  // Gradients
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [deepBlue, Color(0xFF3B82F6)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  
+  static const LinearGradient lavenderGradient = LinearGradient(
+    colors: [lavender, Color(0xFFA78BFA)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  
+  static const LinearGradient tealGradient = LinearGradient(
+    colors: [mutedTeal, Color(0xFF06B6D4)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Animation Curves
+  static const Curve gentleEase = Curves.easeOutCubic;
+  static const Duration quickTransition = Duration(milliseconds: 200);
+  static const Duration smoothTransition = Duration(milliseconds: 300);
+  static const Duration calmTransition = Duration(milliseconds: 400);
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: const ColorScheme.light(
-        primary: primary,
-        secondary: secondary,
-        tertiary: accent,
+        primary: deepBlue,
+        secondary: lavender,
+        tertiary: mutedTeal,
         surface: surfaceLight,
-        background: Colors.white,
+        background: backgroundLight,
         error: danger,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
+        onTertiary: Colors.white,
         onSurface: titleLight,
         onBackground: titleLight,
         outline: borderLight,
+        surfaceVariant: offWhite,
+        onSurfaceVariant: bodyLight,
       ),
-      textTheme: GoogleFonts.interTextTheme().copyWith(
-        displayLarge: GoogleFonts.inter(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: titleLight,
-        ),
-        displayMedium: GoogleFonts.inter(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: titleLight,
-        ),
-        displaySmall: GoogleFonts.inter(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: titleLight,
-        ),
-        headlineLarge: GoogleFonts.inter(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          color: titleLight,
-        ),
-        headlineMedium: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: titleLight,
-        ),
-        headlineSmall: GoogleFonts.inter(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: titleLight,
-        ),
-        titleLarge: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: titleLight,
-        ),
-        titleMedium: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: titleLight,
-        ),
-        titleSmall: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: titleLight,
-        ),
-        bodyLarge: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.normal,
-          color: bodyLight,
-        ),
-        bodyMedium: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.normal,
-          color: bodyLight,
-        ),
-        bodySmall: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.normal,
-          color: mutedLight,
-        ),
-        labelLarge: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: titleLight,
-        ),
-        labelMedium: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: mutedLight,
-        ),
-        labelSmall: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: mutedLight,
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: primary,
-          side: const BorderSide(color: borderLight),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: primary,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          textStyle: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: borderLight),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: borderLight),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: danger),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: danger, width: 2),
-        ),
-        filled: true,
-        fillColor: surfaceLight,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        hintStyle: GoogleFonts.inter(
-          color: mutedLight,
-          fontSize: 14,
-        ),
-        labelStyle: GoogleFonts.inter(
-          color: bodyLight,
-          fontSize: 14,
-        ),
-      ),
-      cardTheme: CardThemeData(
-        color: surfaceLight,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: borderLight),
-        ),
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: titleLight,
-        elevation: 0,
-        centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: titleLight,
-        ),
-      ),
+      textTheme: _buildTextTheme(titleLight, bodyLight, mutedLight),
+      elevatedButtonTheme: _buildElevatedButtonTheme(true),
+      outlinedButtonTheme: _buildOutlinedButtonTheme(true),
+      textButtonTheme: _buildTextButtonTheme(true),
+      inputDecorationTheme: _buildInputDecorationTheme(true),
+      cardTheme: _buildCardTheme(true),
+      appBarTheme: _buildAppBarTheme(true),
+      dialogTheme: _buildDialogTheme(true),
+      snackBarTheme: _buildSnackBarTheme(true),
     );
   }
   
@@ -217,185 +91,424 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: const ColorScheme.dark(
-        primary: primary,
-        secondary: secondary,
-        tertiary: accent,
+        primary: deepBlue,
+        secondary: lavender,
+        tertiary: mutedTeal,
         surface: surfaceDark,
         background: backgroundDark,
         error: danger,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
+        onTertiary: Colors.white,
         onSurface: textDark,
         onBackground: textDark,
         outline: borderDark,
+        surfaceVariant: charcoalGray,
+        onSurfaceVariant: mutedDark,
       ),
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: GoogleFonts.inter(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: textDark,
-        ),
-        displayMedium: GoogleFonts.inter(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: textDark,
-        ),
-        displaySmall: GoogleFonts.inter(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: textDark,
-        ),
-        headlineLarge: GoogleFonts.inter(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          color: textDark,
-        ),
-        headlineMedium: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: textDark,
-        ),
-        headlineSmall: GoogleFonts.inter(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: textDark,
-        ),
-        titleLarge: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: textDark,
-        ),
-        titleMedium: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: textDark,
-        ),
-        titleSmall: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: textDark,
-        ),
-        bodyLarge: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.normal,
-          color: textDark,
-        ),
-        bodyMedium: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.normal,
-          color: textDark,
-        ),
-        bodySmall: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.normal,
-          color: mutedDark,
-        ),
-        labelLarge: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: textDark,
-        ),
-        labelMedium: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: mutedDark,
-        ),
-        labelSmall: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: mutedDark,
-        ),
+      textTheme: _buildTextTheme(textDark, textDark, mutedDark),
+      elevatedButtonTheme: _buildElevatedButtonTheme(false),
+      outlinedButtonTheme: _buildOutlinedButtonTheme(false),
+      textButtonTheme: _buildTextButtonTheme(false),
+      inputDecorationTheme: _buildInputDecorationTheme(false),
+      cardTheme: _buildCardTheme(false),
+      appBarTheme: _buildAppBarTheme(false),
+      dialogTheme: _buildDialogTheme(false),
+      snackBarTheme: _buildSnackBarTheme(false),
+    );
+  }
+
+  static TextTheme _buildTextTheme(Color title, Color body, Color muted) {
+    return GoogleFonts.interTextTheme().copyWith(
+      // Display styles - Large, airy headers
+      displayLarge: GoogleFonts.inter(
+        fontSize: 40,
+        fontWeight: FontWeight.w700,
+        color: title,
+        height: 1.1,
+        letterSpacing: -0.5,
       ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+      displayMedium: GoogleFonts.inter(
+        fontSize: 32,
+        fontWeight: FontWeight.w700,
+        color: title,
+        height: 1.15,
+        letterSpacing: -0.25,
       ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: primary,
-          side: const BorderSide(color: borderDark),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+      displaySmall: GoogleFonts.inter(
+        fontSize: 28,
+        fontWeight: FontWeight.w600,
+        color: title,
+        height: 1.2,
       ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: primary,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          textStyle: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+      
+      // Headline styles - Section headers
+      headlineLarge: GoogleFonts.inter(
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        color: title,
+        height: 1.25,
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: borderDark),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: borderDark),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: danger),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: danger, width: 2),
-        ),
-        filled: true,
-        fillColor: surfaceDark,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        hintStyle: GoogleFonts.inter(
-          color: mutedDark,
-          fontSize: 14,
-        ),
-        labelStyle: GoogleFonts.inter(
-          color: textDark,
-          fontSize: 14,
-        ),
+      headlineMedium: GoogleFonts.inter(
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: title,
+        height: 1.3,
       ),
-      cardTheme: CardThemeData(
-        color: surfaceDark,
-        elevation: 0,
+      headlineSmall: GoogleFonts.inter(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: title,
+        height: 1.3,
+      ),
+      
+      // Title styles - Component titles
+      titleLarge: GoogleFonts.inter(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: title,
+        height: 1.35,
+      ),
+      titleMedium: GoogleFonts.inter(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: title,
+        height: 1.4,
+      ),
+      titleSmall: GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: title,
+        height: 1.4,
+      ),
+      
+      // Body styles - Calm, readable text
+      bodyLarge: GoogleFonts.inter(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: body,
+        height: 1.6,
+      ),
+      bodyMedium: GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: body,
+        height: 1.6,
+      ),
+      bodySmall: GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: muted,
+        height: 1.5,
+      ),
+      
+      // Label styles - Subtle, muted
+      labelLarge: GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: title,
+        height: 1.4,
+      ),
+      labelMedium: GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: muted,
+        height: 1.4,
+      ),
+      labelSmall: GoogleFonts.inter(
+        fontSize: 10,
+        fontWeight: FontWeight.w500,
+        color: muted,
+        height: 1.4,
+        letterSpacing: 0.5,
+      ),
+    );
+  }
+
+  static ElevatedButtonThemeData _buildElevatedButtonTheme(bool isLight) {
+    return ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: deepBlue,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: borderDark),
         ),
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: backgroundDark,
-        foregroundColor: textDark,
         elevation: 0,
-        centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 18,
+        shadowColor: Colors.transparent,
+        textStyle: GoogleFonts.inter(
+          fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: textDark,
+          height: 1.2,
+        ),
+      ).copyWith(
+        backgroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.pressed)) {
+            return deepBlue.withOpacity(0.8);
+          }
+          if (states.contains(MaterialState.hovered)) {
+            return deepBlue.withOpacity(0.9);
+          }
+          return deepBlue;
+        }),
+        overlayColor: MaterialStateProperty.all(Colors.white.withOpacity(0.1)),
+      ),
+    );
+  }
+
+  static OutlinedButtonThemeData _buildOutlinedButtonTheme(bool isLight) {
+    return OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: deepBlue,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        side: BorderSide(
+          color: isLight ? borderLight : borderDark,
+          width: 1.5,
+        ),
+        textStyle: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
+        ),
+      ).copyWith(
+        side: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.pressed)) {
+            return BorderSide(color: deepBlue, width: 2);
+          }
+          if (states.contains(MaterialState.hovered)) {
+            return BorderSide(color: deepBlue, width: 1.5);
+          }
+          return BorderSide(
+            color: isLight ? borderLight : borderDark,
+            width: 1.5,
+          );
+        }),
+        backgroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.pressed)) {
+            return deepBlue.withOpacity(0.05);
+          }
+          if (states.contains(MaterialState.hovered)) {
+            return deepBlue.withOpacity(0.02);
+          }
+          return Colors.transparent;
+        }),
+      ),
+    );
+  }
+
+  static TextButtonThemeData _buildTextButtonTheme(bool isLight) {
+    return TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: deepBlue,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          height: 1.2,
+        ),
+      ).copyWith(
+        overlayColor: MaterialStateProperty.all(deepBlue.withOpacity(0.08)),
+      ),
+    );
+  }
+
+  static InputDecorationTheme _buildInputDecorationTheme(bool isLight) {
+    return InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: isLight ? borderLight : borderDark,
+          width: 1.5,
         ),
       ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: isLight ? borderLight : borderDark,
+          width: 1.5,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: deepBlue, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: danger, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: danger, width: 2),
+      ),
+      filled: true,
+      fillColor: isLight ? surfaceLight : surfaceDark,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      hintStyle: GoogleFonts.inter(
+        color: isLight ? mutedLight : mutedDark,
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+      ),
+      labelStyle: GoogleFonts.inter(
+        color: isLight ? bodyLight : textDark,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+      floatingLabelStyle: GoogleFonts.inter(
+        color: deepBlue,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  static CardThemeData _buildCardTheme(bool isLight) {
+    return CardThemeData(
+      color: isLight ? surfaceLight : surfaceDark,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isLight ? borderLight : borderDark,
+          width: 1,
+        ),
+      ),
+      margin: EdgeInsets.zero,
+    );
+  }
+
+  static AppBarTheme _buildAppBarTheme(bool isLight) {
+    return AppBarTheme(
+      backgroundColor: isLight ? backgroundLight : backgroundDark,
+      foregroundColor: isLight ? titleLight : textDark,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      centerTitle: false,
+      titleSpacing: 0,
+      titleTextStyle: GoogleFonts.inter(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: isLight ? titleLight : textDark,
+        height: 1.2,
+      ),
+      iconTheme: IconThemeData(
+        color: isLight ? titleLight : textDark,
+        size: 24,
+      ),
+      actionsIconTheme: IconThemeData(
+        color: isLight ? titleLight : textDark,
+        size: 24,
+      ),
+    );
+  }
+
+  static DialogThemeData _buildDialogTheme(bool isLight) {
+    return DialogThemeData(
+      backgroundColor: isLight ? backgroundLight : backgroundDark,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isLight ? borderLight : borderDark,
+          width: 1,
+        ),
+      ),
+      titleTextStyle: GoogleFonts.inter(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: isLight ? titleLight : textDark,
+      ),
+      contentTextStyle: GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: isLight ? bodyLight : textDark,
+        height: 1.5,
+      ),
+    );
+  }
+
+  static SnackBarThemeData _buildSnackBarTheme(bool isLight) {
+    return SnackBarThemeData(
+      backgroundColor: isLight ? charcoalGray : surfaceDark,
+      contentTextStyle: GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Colors.white,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      behavior: SnackBarBehavior.floating,
+      elevation: 0,
+    );
+  }
+
+  // Helper methods for glassmorphism effects
+  static BoxDecoration glassContainer({
+    required bool isLight,
+    double opacity = 0.1,
+    double blur = 10,
+    Color? borderColor,
+  }) {
+    return BoxDecoration(
+      color: isLight 
+          ? Colors.white.withOpacity(opacity)
+          : Colors.white.withOpacity(opacity * 0.1),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: borderColor ?? (isLight ? borderLight : borderDark),
+        width: 1,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: isLight 
+              ? Colors.black.withOpacity(0.05)
+              : Colors.black.withOpacity(0.2),
+          blurRadius: blur,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
+  static BoxDecoration elevatedGlassContainer({
+    required bool isLight,
+    double opacity = 0.15,
+    double blur = 20,
+  }) {
+    return BoxDecoration(
+      color: isLight 
+          ? Colors.white.withOpacity(opacity)
+          : Colors.white.withOpacity(opacity * 0.1),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: isLight ? borderLight : borderDark,
+        width: 1,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: isLight 
+              ? Colors.black.withOpacity(0.08)
+              : Colors.black.withOpacity(0.3),
+          blurRadius: blur,
+          offset: const Offset(0, 8),
+        ),
+        BoxShadow(
+          color: isLight 
+              ? Colors.black.withOpacity(0.04)
+              : Colors.black.withOpacity(0.1),
+          blurRadius: blur * 0.5,
+          offset: const Offset(0, 2),
+        ),
+      ],
     );
   }
 }

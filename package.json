@@ -1,0 +1,19 @@
+{
+  "name": "bettersaid",
+  "version": "1.0.0",
+  "description": "Anonymous, Link-Based Fight Mediator",
+  "scripts": {
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "funcs:serve": "supabase functions serve",
+    "funcs:deploy": "supabase functions deploy",
+    "test": "deno test --allow-all supabase/functions/**/*test.ts",
+    "eval:offline": "deno run --allow-all tools/eval/eval.ts"
+  },
+  "keywords": ["conflict-resolution", "anonymous", "ai", "mediation"],
+  "author": "BetterSaid Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

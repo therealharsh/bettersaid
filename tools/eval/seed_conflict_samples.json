@@ -1,0 +1,82 @@
+[
+  {
+    "id": "sample_001",
+    "goal": "Resolve disagreement about project deadline",
+    "original_draft": "You're being completely unrealistic about this deadline! There's no way we can finish everything by Friday. You never listen to what the team actually needs and just make arbitrary decisions. This is exactly why our last project failed - because you rushed everything and ignored all our concerns. I'm sick of this pattern.",
+    "context": "Team member frustrated with project manager's timeline expectations",
+    "toxicity_level": "high",
+    "categories": ["blame", "absolutes", "personal_attack"]
+  },
+  {
+    "id": "sample_002", 
+    "goal": "Address concerns about household chores distribution",
+    "original_draft": "I can't believe you left all the dishes for me again. You're so lazy and inconsiderate. You never help with anything around here and I'm tired of being your maid. This is ridiculous and I hate living like this.",
+    "context": "Roommate conflict about cleaning responsibilities",
+    "toxicity_level": "medium",
+    "categories": ["blame", "name_calling", "absolutes"]
+  },
+  {
+    "id": "sample_003",
+    "goal": "Discuss budget concerns for upcoming vacation",
+    "original_draft": "Your spending ideas are insane. We can't afford that expensive hotel and you know it. You're being irresponsible with money again, just like when you bought that stupid car. I don't understand how you can be so careless about our finances.",
+    "context": "Partner disagreement about vacation planning",
+    "toxicity_level": "medium", 
+    "categories": ["blame", "name_calling", "past_grievances"]
+  },
+  {
+    "id": "sample_004",
+    "goal": "Resolve scheduling conflict for shared workspace",
+    "original_draft": "This is the third time you've booked the conference room when I needed it. You're doing this on purpose to mess with my presentations. You're unprofessional and petty. I'm going to report this to management because you clearly can't handle sharing resources like an adult.",
+    "context": "Coworker conflict about resource scheduling",
+    "toxicity_level": "high",
+    "categories": ["accusations", "threats", "personal_attack"]
+  },
+  {
+    "id": "sample_005",
+    "goal": "Address late payment issue with freelance client",
+    "original_draft": "I'm extremely frustrated that payment is late again. This is unprofessional and affects my ability to pay my bills. I need to understand what's causing these delays and how we can prevent them going forward.",
+    "context": "Freelancer addressing client payment delays",
+    "toxicity_level": "low",
+    "categories": ["professional_concern"]
+  },
+  {
+    "id": "sample_006",
+    "goal": "Discuss child custody schedule changes",
+    "original_draft": "You can't just change the custody schedule whenever you feel like it. The kids need stability and you're being selfish by constantly switching things around. You never think about what's best for them, only what's convenient for you. This has to stop.",
+    "context": "Co-parent discussing custody arrangements",
+    "toxicity_level": "medium",
+    "categories": ["blame", "accusations", "absolutes"]
+  },
+  {
+    "id": "sample_007",
+    "goal": "Address noise complaints from neighbor",
+    "original_draft": "Your music is way too loud every single night. I've asked you nicely multiple times and you just ignore me. You're inconsiderate and rude. If this doesn't stop immediately, I'm calling the landlord and filing a noise complaint.",
+    "context": "Neighbor conflict about noise levels",
+    "toxicity_level": "medium",
+    "categories": ["threats", "name_calling", "absolutes"]
+  },
+  {
+    "id": "sample_008",
+    "goal": "Resolve disagreement about restaurant choice for dinner",
+    "original_draft": "We always go where you want to go. You never consider what I might want to eat. You're selfish and only think about yourself. I'm tired of this pattern and I want to go somewhere different for once.",
+    "context": "Partner disagreement about dining choices",
+    "toxicity_level": "low",
+    "categories": ["absolutes", "blame"]
+  },
+  {
+    "id": "sample_009",
+    "goal": "Address concerns about group project contribution",
+    "original_draft": "You haven't contributed anything meaningful to this project. You're lazy and just coasting while the rest of us do all the work. This is unfair and I'm not going to let you get credit for our hard work. You need to step up or get out.",
+    "context": "Student group project conflict",
+    "toxicity_level": "high",
+    "categories": ["accusations", "name_calling", "threats"]
+  },
+  {
+    "id": "sample_010",
+    "goal": "Discuss concerns about meeting frequency",
+    "original_draft": "These daily meetings are unnecessary and waste everyone's time. I think we could accomplish the same goals with fewer, more focused meetings. Could we explore reducing the frequency to twice a week?",
+    "context": "Employee feedback about meeting schedule",
+    "toxicity_level": "low",
+    "categories": ["constructive_feedback"]
+  }
+]

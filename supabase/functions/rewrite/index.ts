@@ -35,6 +35,22 @@ interface RewriteResult {
 interface RewriteResponse {
   rewrites: RewriteResult[]
   notes?: string
+  contextSummary?: string
+}
+
+interface ConversationMessage {
+  id: string
+  author_session: string | null
+  role: string
+  content: string
+  created_at: string
+}
+
+interface ConversationContext {
+  messages: ConversationMessage[]
+  summary: string
+  participantCount: number
+  currentUserSession: string
 }
 
 interface ContentSafetyResult {
@@ -67,27 +83,174 @@ function extractBearerToken(authHeader: string | null): string | null {
   return authHeader.substring(7)
 }
 
-// Content Safety (Mock implementation - replace with Azure Content Safety)
-async function moderateContent(text: string): Promise<ContentSafetyResult> {
+// Conversation Context Retrieval
+async function getConversationContext(
+  supabase: any,
+  chatId: string,
+  currentSessionId: string
+): Promise<ConversationContext> {
+  // Fetch recent conversation history (last 20 messages)
+  const { data: messages, error: messagesError } = await supabase
+    .from('messages')
+    .select('id, author_session, role, content, created_at')
+    .eq('chat_id', chatId)
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  if (messagesError) {
+    console.error('Failed to fetch conversation history:', messagesError)
+    return {
+      messages: [],
+      summary: 'Unable to retrieve conversation history.',
+      participantCount: 0,
+      currentUserSession: currentSessionId
+    }
+  }
+
+  // Reverse to get chronological order
+  const chronologicalMessages = (messages || []).reverse()
+
+  // Get participant count
+  const { data: participants } = await supabase
+    .from('participants')
+    .select('session_id')
+    .eq('chat_id', chatId)
+
+  const participantCount = participants?.length || 0
+
+  // Generate conversation summary
+  const summary = generateConversationSummary(chronologicalMessages, currentSessionId, participantCount)
+
+  return {
+    messages: chronologicalMessages,
+    summary,
+    participantCount,
+    currentUserSession: currentSessionId
+  }
+}
+
+// Generate a concise summary of the conversation context
+function generateConversationSummary(
+  messages: ConversationMessage[],
+  currentSessionId: string,
+  participantCount: number
+): string {
+  if (messages.length === 0) {
+    return 'This is the start of a new conversation.'
+  }
+
+  const userMessages = messages.filter(m => m.role === 'user')
+  const recentMessages = messages.slice(-10) // Last 10 messages for context
+
+  // Identify conversation patterns
+  const hasMultipleParticipants = participantCount > 1
+  const currentUserMessages = userMessages.filter(m => m.author_session === currentSessionId)
+  const otherUserMessages = userMessages.filter(m => m.author_session !== currentSessionId)
+
+  let summary = `Conversation with ${participantCount} participant${participantCount > 1 ? 's' : ''}. `
+
+  if (currentUserMessages.length > 0) {
+    summary += `You have sent ${currentUserMessages.length} message${currentUserMessages.length > 1 ? 's' : ''}. `
+  }
+
+  if (otherUserMessages.length > 0) {
+    summary += `Other participant${otherUserMessages.length > 1 ? 's have' : ' has'} sent ${otherUserMessages.length} message${otherUserMessages.length > 1 ? 's' : ''}. `
+  }
+
+  // Analyze recent message tone and content
+  if (recentMessages.length > 0) {
+    const recentUserMessages = recentMessages.filter(m => m.role === 'user')
+    if (recentUserMessages.length > 0) {
+      const lastMessage = recentUserMessages[recentUserMessages.length - 1]
+      const isFromCurrentUser = lastMessage.author_session === currentSessionId
+      summary += `Most recent message was from ${isFromCurrentUser ? 'you' : 'the other participant'}. `
+    }
+  }
+
+  return summary.trim()
+}
+
+// Enhanced Content Safety with Two-Tier Moderation
+interface ModerationResult {
+  hardBlock: boolean // True for violence, self-harm, illegal content
+  softFlag: boolean  // True for harsh/disrespectful language
+  categories: Record<string, boolean>
+  severity: 'low' | 'medium' | 'high'
+  reason?: string
+}
+
+async function moderateContent(text: string): Promise<ModerationResult> {
   // This is a mock implementation
   // In production, this would call Azure Content Safety API
   
   const lowerText = text.toLowerCase()
-  const categories = {
-    violence: lowerText.includes('kill') || lowerText.includes('hurt') || lowerText.includes('attack'),
-    hate: lowerText.includes('hate') || lowerText.includes('stupid') || lowerText.includes('idiot'),
-    self_harm: lowerText.includes('suicide') || lowerText.includes('kill myself'),
-    sexual: false // Not implemented in mock
+  
+  // STRICT FILTER - Hard blocks that show crisis resources
+  const strictCategories = {
+    violence: lowerText.includes('kill you') || lowerText.includes('hurt you') || 
+              lowerText.includes('attack you') || lowerText.includes('weapon') ||
+              lowerText.includes('murder') || lowerText.includes('assault'),
+    self_harm: lowerText.includes('suicide') || lowerText.includes('kill myself') ||
+               lowerText.includes('end my life') || lowerText.includes('hurt myself'),
+    illegal: lowerText.includes('drug deal') || lowerText.includes('illegal') ||
+             lowerText.includes('weapon') || lowerText.includes('bomb')
   }
   
-  const blocked = Object.values(categories).some(Boolean)
-  const severity = blocked ? 'medium' : 'low'
+  // LENIENT FILTER - Soft flags for harsh language that can be rewritten
+  const softCategories = {
+    harsh_language: lowerText.includes('hate') || lowerText.includes('stupid') || 
+                   lowerText.includes('idiot') || lowerText.includes('damn') ||
+                   lowerText.includes('pissed') || lowerText.includes('annoying'),
+    disrespectful: lowerText.includes('disrespect') || lowerText.includes('rude') ||
+                  lowerText.includes('inconsiderate') || lowerText.includes('selfish'),
+    frustrated: lowerText.includes('frustrated') || lowerText.includes('angry') ||
+               lowerText.includes('mad') || lowerText.includes('upset')
+  }
   
-  return { blocked, categories, severity }
+  const hardBlock = Object.values(strictCategories).some(Boolean)
+  const softFlag = Object.values(softCategories).some(Boolean)
+  
+  let severity: 'low' | 'medium' | 'high' = 'low'
+  let reason = ''
+  
+  if (hardBlock) {
+    severity = 'high'
+    if (strictCategories.violence) reason = 'Contains violent content'
+    else if (strictCategories.self_harm) reason = 'Contains self-harm content'
+    else if (strictCategories.illegal) reason = 'Contains illegal content'
+  } else if (softFlag) {
+    severity = 'medium'
+    if (softCategories.harsh_language) reason = 'Contains harsh language'
+    else if (softCategories.disrespectful) reason = 'May come across as disrespectful'
+    else if (softCategories.frustrated) reason = 'Expresses strong frustration'
+  }
+  
+  return {
+    hardBlock,
+    softFlag,
+    categories: { ...strictCategories, ...softCategories },
+    severity,
+    reason
+  }
 }
 
-// AI Rewrite using Azure OpenAI
-async function generateRewrites(goal: string, draft: string): Promise<RewriteResponse> {
+// Legacy interface for backward compatibility
+async function moderateContentLegacy(text: string): Promise<ContentSafetyResult> {
+  const result = await moderateContent(text)
+  return {
+    blocked: result.hardBlock,
+    categories: result.categories,
+    severity: result.severity
+  }
+}
+
+// AI Rewrite using Azure OpenAI with Conversation Context
+async function generateRewrites(
+  goal: string, 
+  draft: string, 
+  context?: ConversationContext, 
+  moderationFlag?: { softFlag: boolean; reason?: string }
+): Promise<RewriteResponse> {
   const azureOpenAIEndpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT')
   const azureOpenAIApiKey = Deno.env.get('AZURE_OPENAI_API_KEY')
   const azureOpenAIDeployment = Deno.env.get('AZURE_OPENAI_DEPLOYMENT') || 'gpt-4'
@@ -123,30 +286,58 @@ async function generateRewrites(goal: string, draft: string): Promise<RewriteRes
     }
   }
 
-  // Construct the system prompt for optimal communication rewriting
-  const systemPrompt = `You are an expert communication coach specializing in helping people express themselves more effectively in conversations. Your role is to rewrite messages to improve clarity, reduce conflict potential, and promote understanding.
+  // Build conversation context section for the prompt
+  let contextSection = ''
+  if (context && context.messages.length > 0) {
+    contextSection = `
+CONVERSATION CONTEXT:
+${context.summary}
 
-TASK: Rewrite the user's draft message in three distinct communication styles while preserving the core intent and authenticity.
+RECENT CONVERSATION HISTORY:
+${context.messages.slice(-8).map(msg => {
+  const isCurrentUser = msg.author_session === context.currentUserSession
+  const sender = msg.role === 'user' ? (isCurrentUser ? 'You' : 'Other participant') : 'System'
+  return `${sender}: ${msg.content}`
+}).join('\n')}
+
+CONTEXT CONSIDERATIONS:
+- Reference relevant points from the conversation history when appropriate
+- Build on previous exchanges rather than ignoring them
+- Address any unresolved issues or concerns that have been raised
+- Maintain consistency with the established communication tone
+- Consider how your message fits into the ongoing dialogue
+`
+  }
+
+  // Construct the system prompt for optimal communication rewriting
+  const systemPrompt = `You are a communication coach helping people express themselves more effectively. Your role is to rewrite messages to improve clarity and reduce conflict while preserving authenticity.
+
+TASK: Rewrite the user's draft message in three distinct communication styles while keeping their authentic voice and core intent.
 
 STYLES REQUIRED:
-1. CALM: Emphasizes empathy, collaboration, and emotional safety. Uses "I" statements, acknowledges others' perspectives, and invites dialogue. Tone is gentle but clear.
-2. DIRECT: Clear, straightforward, and assertive without being aggressive. Gets to the point quickly while remaining respectful. Professional but warm.
-3. BRIEF: Concise and efficient communication. Removes unnecessary words while maintaining politeness and clarity. Ideal for quick exchanges.
+1. CALM: Uses "I" statements, acknowledges feelings, gentle but clear. Focuses on understanding and emotional safety.
+2. DIRECT: Clear, straightforward, gets to the point. Respectful but assertive. Professional tone.
+3. BRIEF: Concise and efficient. Removes unnecessary words while staying polite and clear.
 
-GUIDELINES:
-- Preserve the speaker's authentic voice and core message
-- Remove inflammatory language while keeping emotional truth
-- Use inclusive language that builds rather than burns bridges
-- Maintain appropriate formality level for the context
-- Each rewrite should feel natural, not robotic
-- Avoid corporate speak or overly clinical language
-- Focus on solutions and forward movement when possible
+CRITICAL GUIDELINES:
+- Preserve the speaker's authentic voice and specific message
+- Keep emotional truth - don't sanitize genuine feelings
+- Sound natural and conversational, NOT robotic or corporate
+- Avoid repetitive phrases like "let's work together" or "find a way forward"
+- Don't add collaborative language unless it was in the original
+- Match the relationship context (casual vs formal, personal vs professional)
+- Each rewrite should feel like something the person would actually say
+- Vary your language - don't repeat the same phrases across rewrites
 
 CONTEXT AWARENESS:
-- Consider the communication goal provided by the user
-- Adapt tone based on relationship dynamics implied in the message
-- Balance honesty with kindness
-- Prioritize understanding over being "right"
+- Consider the communication goal and relationship dynamics
+- Use conversation history to make rewrites contextually relevant
+- Balance honesty with appropriate tone for the situation
+- Don't force positivity onto negative emotions - help express them constructively
+${contextSection ? '- Reference conversation context naturally when relevant, don\'t force connections' : ''}
+${moderationFlag?.softFlag ? `- SAFETY NOTE: The original message was flagged as potentially ${moderationFlag.reason?.toLowerCase()}. Help express the core message more constructively while preserving the authentic emotion.` : ''}
+
+${contextSection}
 
 OUTPUT FORMAT: You must respond with a valid JSON object only. Do not include any markdown formatting, code blocks, or explanatory text. Return exactly this structure:
 {
@@ -155,14 +346,14 @@ OUTPUT FORMAT: You must respond with a valid JSON object only. Do not include an
     {"style": "direct", "text": "rewritten message"}, 
     {"style": "brief", "text": "rewritten message"}
   ],
-  "analysis": "Brief analysis of the original message's tone and intent"
+  "analysis": "Brief analysis of the original message's tone and intent${contextSection ? ', considering conversation context' : ''}. Under 200 characters."
 }`
 
   const userPrompt = `COMMUNICATION GOAL: ${goal}
 
 ORIGINAL DRAFT: ${draft}
 
-Please rewrite this message in the three required styles (calm, direct, brief). Focus on maintaining the speaker's authentic voice while improving the message's effectiveness for healthy communication.`
+Rewrite this message in three styles (calm, direct, brief). Keep the authentic voice and core message, but help it land better with the recipient. Make each version sound natural and conversational - avoid formulaic or repetitive language.`
 
   try {
     // Make request to Azure OpenAI
@@ -372,11 +563,15 @@ serve(async (req) => {
       )
     }
 
-    // Moderate input content
+    // NEW SAFETY FLOW: Check for hard blocks first, but let soft flags through to AI
+    console.log('🛡️ [Safety] Running content moderation...')
     const inputModeration = await moderateContent(draft)
     
-    if (inputModeration.blocked) {
-      // Log moderation block
+    // HARD BLOCK: Violence, self-harm, illegal content → immediate block with crisis resources
+    if (inputModeration.hardBlock) {
+      console.log('🚫 [Safety] Hard block triggered:', inputModeration.reason)
+      
+      // Log the hard block
       await supabase
         .from('moderation_logs')
         .insert({
@@ -391,6 +586,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           blocked: true,
+          reason: inputModeration.reason,
           resources: [
             'National Suicide Prevention Lifeline: 988',
             'Crisis Text Line: Text HOME to 741741',
@@ -404,27 +600,46 @@ serve(async (req) => {
       )
     }
 
-    // Generate AI rewrites
-    console.log('🚀 [Rewrite] Starting AI rewrite generation...')
-    const rewriteResponse = await generateRewrites(goal, draft)
+    // SOFT FLAG: Harsh/disrespectful language → tag but continue to AI rewriting
+    if (inputModeration.softFlag) {
+      console.log('⚠️ [Safety] Soft flag detected:', inputModeration.reason, '- proceeding with rewrite')
+    }
+
+    // Retrieve conversation context for enhanced AI rewrites
+    console.log('🔍 [Context] Retrieving conversation history...')
+    const conversationContext = await getConversationContext(supabase, chat.id, sessionId)
+    console.log('✅ [Context] Retrieved', conversationContext.messages.length, 'messages for context')
+
+    // Generate AI rewrites with conversation context (including flagged content)
+    console.log('🚀 [Rewrite] Starting AI rewrite generation with context...')
+    const moderationContext = inputModeration.softFlag ? { 
+      softFlag: true, 
+      reason: inputModeration.reason 
+    } : undefined
+    const rewriteResponse = await generateRewrites(goal, draft, conversationContext, moderationContext)
     console.log('✅ [Rewrite] AI rewrite generation completed')
 
-    // Moderate each rewrite
-    const moderatedRewrites: RewriteResult[] = []
+    // Only moderate AI-generated rewrites for hard blocks (not soft flags)
+    const safeRewrites: RewriteResult[] = []
     for (const rewrite of rewriteResponse.rewrites) {
       const outputModeration = await moderateContent(rewrite.text)
       
-      if (!outputModeration.blocked) {
-        moderatedRewrites.push(rewrite)
+      // Only filter out hard blocks from AI rewrites
+      if (!outputModeration.hardBlock) {
+        safeRewrites.push(rewrite)
+      } else {
+        console.log('🚫 [Safety] AI rewrite contained hard block, filtered out:', rewrite.style)
       }
     }
 
-    // If all rewrites were blocked, return error
-    if (moderatedRewrites.length === 0) {
+    // If all AI rewrites were hard blocked (very unlikely), return error
+    if (safeRewrites.length === 0) {
+      console.log('❌ [Safety] All AI rewrites were hard blocked')
       return new Response(
         JSON.stringify({ 
           blocked: true,
-          resources: ['Unable to generate safe alternatives. Please rephrase your message.']
+          reason: 'Unable to generate safe alternatives',
+          resources: ['Please rephrase your message and try again.']
         }),
         { 
           status: 400,
@@ -453,9 +668,17 @@ serve(async (req) => {
         created_at: new Date().toISOString()
       })
 
+    // Enhance the response with safety information for soft flags
+    let enhancedNotes = rewriteResponse.notes || 'AI-generated communication suggestions. Please review before sending.'
+    
+    if (inputModeration.softFlag) {
+      enhancedNotes = `⚠️ ${inputModeration.reason}. Here are healthier ways to express your message:\n\n${enhancedNotes}`
+    }
+
     const response: RewriteResponse = {
-      rewrites: moderatedRewrites,
-      notes: rewriteResponse.notes
+      rewrites: safeRewrites,
+      notes: enhancedNotes,
+      contextSummary: conversationContext.messages.length > 0 ? conversationContext.summary : undefined
     }
 
     return new Response(

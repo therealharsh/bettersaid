@@ -970,7 +970,7 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
                           )
                         : Icon(PhosphorIcons.magicWand(), size: 20),
                     label: Text(
-                      _isGeneratingRewrites ? 'Generating...' : 'Get AI Rewrites',
+                      _isGeneratingRewrites ? 'Generating...' : 'Draft',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -1041,7 +1041,7 @@ class _RoomChatScreenState extends ConsumerState<RoomChatScreen> {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  'Tap "Get AI Rewrites" for calm, direct, and brief alternatives',
+                  'Tap "Draft" for calm, direct, and brief alternatives',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withOpacity(0.6),
                     height: 1.4,

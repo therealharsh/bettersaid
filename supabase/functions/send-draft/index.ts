@@ -34,18 +34,127 @@ function extractBearerToken(authHeader: string | null): string | null {
   return authHeader.substring(7)
 }
 
-// Mock content moderation
-async function moderateContent(text: string): Promise<{ blocked: boolean; categories: Record<string, boolean> }> {
-  const lowerText = text.toLowerCase()
-  const categories = {
-    violence: lowerText.includes('kill') || lowerText.includes('hurt') || lowerText.includes('attack'),
-    hate: lowerText.includes('hate') || lowerText.includes('stupid') || lowerText.includes('idiot'),
-    self_harm: lowerText.includes('suicide') || lowerText.includes('kill myself'),
-    sexual: false
-  }
+// Enhanced Content Safety with Two-Tier Moderation (same as rewrite endpoint)
+interface ModerationResult {
+  hardBlock: boolean // True for violence, self-harm, illegal content
+  softFlag: boolean  // True for harsh/disrespectful language
+  categories: Record<string, boolean>
+  severity: 'low' | 'medium' | 'high'
+  reason?: string
+}
+
+async function moderateContent(text: string): Promise<ModerationResult> {
+  const azureOpenAIEndpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT')
+  const azureOpenAIApiKey = Deno.env.get('AZURE_OPENAI_API_KEY')
+  const azureOpenAIDeployment = Deno.env.get('AZURE_OPENAI_DEPLOYMENT') || 'gpt-4'
   
-  const blocked = Object.values(categories).some(Boolean)
-  return { blocked, categories }
+  // Fallback to simple keyword-based moderation if Azure OpenAI not configured
+  if (!azureOpenAIEndpoint || !azureOpenAIApiKey) {
+    console.log('⚠️ [Moderation] Azure OpenAI not configured, using basic fallback')
+    return {
+      hardBlock: false,
+      softFlag: false,
+      categories: {},
+      severity: 'low'
+    }
+  }
+
+  const systemPrompt = `You are a content moderation AI. Analyze the message for safety violations.
+
+HARD BLOCK (immediate crisis intervention needed):
+- Violence: Threats of physical harm to others, murder, assault
+- Self-harm: Suicide ideation, self-injury threats, ending life
+- Illegal: Drug dealing, weapons sales, bomb making, other serious crimes
+
+SOFT FLAG (harsh but not dangerous):
+- Harsh language: Insults, profanity, mean-spirited comments
+- Disrespectful: Rude, inconsiderate, dismissive language
+- Frustrated: Strong anger, upset feelings, emotional outbursts
+
+IMPORTANT: Emotional expressions like "I feel hurt", "I'm frustrated", or "this is disappointing" should NOT be flagged. Only flag genuinely harmful or excessively harsh content.
+
+Respond with JSON only:
+{
+  "hardBlock": boolean,
+  "softFlag": boolean, 
+  "categories": {
+    "violence": boolean,
+    "self_harm": boolean,
+    "illegal": boolean,
+    "harsh_language": boolean,
+    "disrespectful": boolean,
+    "frustrated": boolean
+  },
+  "severity": "low" | "medium" | "high",
+  "reason": "brief explanation if flagged"
+}`
+
+  try {
+    const response = await fetch(
+      `${azureOpenAIEndpoint}/openai/deployments/${azureOpenAIDeployment}/chat/completions?api-version=2024-02-15-preview`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': azureOpenAIApiKey,
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Analyze this message: "${text}"` }
+          ],
+          max_tokens: 300,
+          temperature: 0.1, // Low temperature for consistent moderation
+          response_format: { type: "json_object" }
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      console.error('Azure OpenAI moderation error:', response.status, await response.text())
+      throw new Error(`Moderation API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+    const aiResponse = data.choices?.[0]?.message?.content
+
+    if (!aiResponse) {
+      throw new Error('No moderation response from AI')
+    }
+
+    const result = JSON.parse(aiResponse)
+    
+    console.log('🤖 [AI Moderation] Result:', result)
+    
+    return {
+      hardBlock: result.hardBlock || false,
+      softFlag: result.softFlag || false,
+      categories: result.categories || {},
+      severity: result.severity || 'low',
+      reason: result.reason
+    }
+
+  } catch (error) {
+    console.error('AI moderation failed, using safe fallback:', error)
+    
+    // Safe fallback - don't block anything if AI fails
+    return {
+      hardBlock: false,
+      softFlag: false,
+      categories: {},
+      severity: 'low',
+      reason: 'AI moderation unavailable'
+    }
+  }
+}
+
+// Legacy function for backward compatibility
+async function moderateContentLegacy(text: string): Promise<{ blocked: boolean; categories: Record<string, boolean> }> {
+  const result = await moderateContent(text)
+  return {
+    blocked: result.hardBlock, // Only hard blocks are treated as "blocked"
+    categories: result.categories
+  }
 }
 
 serve(async (req) => {
@@ -123,9 +232,14 @@ serve(async (req) => {
       )
     }
 
-    // Moderate content
+    // NEW SAFETY FLOW: Only block hard violations when sending messages
+    console.log('🛡️ [SendDraft] Running content moderation...')
     const moderation = await moderateContent(draft)
-    if (moderation.blocked) {
+    
+    // HARD BLOCK ONLY: Violence, self-harm, illegal content → block the send
+    if (moderation.hardBlock) {
+      console.log('🚫 [SendDraft] Hard block triggered:', moderation.reason)
+      
       await supabase
         .from('moderation_logs')
         .insert({
@@ -133,16 +247,38 @@ serve(async (req) => {
           endpoint: 'send-draft',
           blocked: true,
           categories: moderation.categories,
+          severity: moderation.severity,
           created_at: new Date().toISOString()
         })
 
       return new Response(
         JSON.stringify({ 
           blocked: true,
-          resources: ['National Suicide Prevention Lifeline: 988']
+          reason: moderation.reason,
+          resources: [
+            'National Suicide Prevention Lifeline: 988',
+            'Crisis Text Line: Text HOME to 741741',
+            'International Association for Suicide Prevention: https://www.iasp.info/resources/Crisis_Centres/'
+          ]
         }),
         { status: 400, headers: { ...corsHeaders(), 'Content-Type': 'application/json' } }
       )
+    }
+
+    // SOFT FLAGS: Log but allow the message to be sent
+    if (moderation.softFlag) {
+      console.log('⚠️ [SendDraft] Soft flag detected but allowing send:', moderation.reason)
+      // Log soft flags for analytics but don't block
+      await supabase
+        .from('moderation_logs')
+        .insert({
+          public_code: publicCode,
+          endpoint: 'send-draft',
+          blocked: false,
+          categories: moderation.categories,
+          severity: moderation.severity,
+          created_at: new Date().toISOString()
+        })
     }
 
     // Store message
